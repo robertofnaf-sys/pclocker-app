@@ -122,7 +122,11 @@ app.put('/api/prestamos/:id', (req, res) => {
 });
 
 // ==========================================
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
 });
+
+module.exports = app; // <--- AGREGA ESTA LÍNEA
