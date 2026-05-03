@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
@@ -7,11 +8,13 @@ app.use(cors());
 app.use(express.json());
 
 // 1. Crear la conexión a MySQL
+// 1. Crear la conexión a MySQL (Usando Variables de Entorno)
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',          
-    password: '12345678', // <-- Vuelve a poner tu contraseña de Workbench
-    database: 'pclocker_db' 
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT
 });
 
 db.connect(err => {
