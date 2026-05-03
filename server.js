@@ -8,13 +8,12 @@ app.use(cors());
 app.use(express.json());
 
 // 1. Crear la conexión a MySQL
-// 1. Crear la conexión a MySQL (Usando Variables de Entorno)
 const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT
+    host: process.env.MYSQLHOST,     // Antes era DB_HOST
+    user: process.env.MYSQLUSER,     // Antes era DB_USER
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE, // Antes era DB_NAME
+    port: process.env.MYSQLPORT
 });
 
 db.connect(err => {
