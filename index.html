@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PcLocker - Sistema de Gestión</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        darkBg: '#0f1423',
+                        darkCard: '#1a2138',
+                        darkBorder: '#293552',
+                        brandBlue: '#8a9dfc',
+                        activeBlue: '#4b8ff5'
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #293552; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #4b8ff5; }
+        
+        #qr-reader { border: none !important; border-radius: 12px; overflow: hidden; }
+        #qr-reader button { background-color: #4b8ff5; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin: 10px; }
+        #qr-reader__dashboard_section_csr span { color: #8d97a5 !important; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-darkBg dark:text-gray-200 font-sans h-screen flex overflow-hidden transition-colors duration-300">
+
+    <div id="login-screen" class="fixed inset-0 z-[70] flex items-center justify-center bg-gray-100 dark:bg-darkBg transition-colors duration-300">
+        <div class="bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder p-8 rounded-2xl shadow-xl w-full max-w-sm text-center">
+            <span class="text-5xl block mb-2">💻</span>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-6 tracking-wider">PcLocker</h1>
+            
+            <div class="flex border-b border-gray-200 dark:border-darkBorder mb-6">
+                <button onclick="toggleAccessForm('login')" id="tab-login" class="flex-1 pb-3 text-sm font-semibold border-b-2 border-activeBlue text-activeBlue">Iniciar Sesión</button>
+                <button onclick="toggleAccessForm('register')" id="tab-register" class="flex-1 pb-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Registrarse</button>
+            </div>
+
+            <form id="login-form" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Cuenta</label>
+                    <input type="text" id="login-user" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white focus:outline-none focus:border-activeBlue" placeholder="admin o user">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Contraseña</label>
+                    <input type="password" id="login-pass" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white focus:outline-none focus:border-activeBlue" placeholder="••••">
+                </div>
+                <div id="login-error" class="text-red-500 text-xs hidden">Credenciales incorrectas.</div>
+                <button type="submit" class="w-full bg-activeBlue text-white font-medium py-3 rounded-lg hover:bg-blue-600 transition mt-2">Entrar</button>
+            </form>
+
+            <form id="register-form" class="space-y-4 text-left hidden">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Nuevo Usuario</label>
+                    <input type="text" id="register-user" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white focus:outline-none focus:border-activeBlue" placeholder="ej: mario_bros">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Contraseña</label>
+                    <input type="password" id="register-pass" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white focus:outline-none focus:border-activeBlue" placeholder="Crea tu contraseña">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Confirmar Contraseña</label>
+                    <input type="password" id="register-pass-confirm" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white focus:outline-none focus:border-activeBlue" placeholder="Repite tu contraseña">
+                </div>
+                <div id="register-error" class="text-red-500 text-xs hidden">Error en el registro.</div>
+                <div id="register-success" class="text-green-500 text-xs hidden">Registro exitoso. Espera la aprobación del admin.</div>
+                <button type="submit" class="w-full bg-green-600 text-white font-medium py-3 rounded-lg hover:bg-green-700 transition mt-2">Registrarse</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modales (Mantienen misma estructura) -->
+    <div id="qr-modal" class="fixed inset-0 z-[60] bg-black/60 hidden items-center justify-center backdrop-blur-sm transition-all">
+        <div class="bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder p-6 rounded-2xl shadow-2xl text-center max-w-sm w-full">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-1">Código QR</h3>
+            <p id="modal-qr-id" class="text-sm text-gray-500 dark:text-gray-400 mb-4 uppercase tracking-wide"></p>
+            <div class="flex justify-center mb-6"><div id="modal-qrcode" class="p-4 bg-white rounded-xl shadow-inner border border-gray-100"></div></div>
+            <div class="flex gap-3">
+                <button onclick="closeQRModal()" class="flex-1 bg-gray-200 dark:bg-darkBg text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm hover:bg-gray-300 dark:hover:bg-white/10 transition font-medium">Cerrar</button>
+                <button onclick="printModalQR()" class="flex-1 bg-activeBlue text-white py-2 rounded-lg text-sm hover:bg-blue-600 transition font-medium">🖨️ Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="password-modal" class="fixed inset-0 z-[60] bg-black/60 hidden items-center justify-center backdrop-blur-sm transition-all">
+        <div class="bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder p-6 rounded-2xl shadow-2xl max-w-sm w-full">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-1">Cambiar Contraseña</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Usuario: <strong id="pass-modal-user" class="text-activeBlue"></strong></p>
+            
+            <form id="change-pass-form" class="space-y-4">
+                <input type="hidden" id="pass-target-id">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Nueva Contraseña</label>
+                    <input type="password" id="new-password" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white focus:outline-none focus:border-activeBlue">
+                </div>
+                <div class="flex gap-3 mt-4">
+                    <button type="button" onclick="closePasswordModal()" class="flex-1 bg-gray-200 dark:bg-darkBg text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm hover:bg-gray-300 dark:hover:bg-white/10 transition font-medium">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm hover:bg-green-700 transition font-medium">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-container" class="w-full h-full flex hidden">
+        
+        <aside class="w-64 bg-white dark:bg-transparent border-r border-gray-200 dark:border-darkBorder flex flex-col justify-between flex-shrink-0 transition-colors duration-300">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-8">
+                    <span class="text-2xl">💻</span>
+                    <h1 class="text-2xl font-bold text-activeBlue dark:text-brandBlue tracking-wide">PcLocker</h1>
+                </div>
+
+                <div class="mb-8 px-4 py-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-darkBorder relative group">
+                    <p class="text-xs text-gray-400 mb-1">Sesión iniciada como:</p>
+                    <p class="font-bold text-gray-800 dark:text-white flex items-center justify-between">
+                        <span id="current-user-display" class="capitalize">...</span>
+                        <span id="current-role-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-activeBlue uppercase">Rol</span>
+                    </p>
+                    <div id="sidebar-pending-alert" class="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-yellow-500 text-white flex items-center justify-center font-bold text-xs hidden animate-pulse" title="Tu cuenta espera aprobación del admin">⚠️</div>
+                </div>
+
+                <nav class="space-y-2">
+                    <button onclick="switchTab('panel')" id="nav-panel" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-activeBlue text-white font-medium shadow-md shadow-blue-500/20 transition-all">
+                        📊 Panel
+                    </button>
+                    
+                    <button onclick="switchTab('prestamos')" id="nav-prestamos" class="nav-btn hidden w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-all relative">
+                        🤝 Solicitudes
+                        <span id="loans-pending-count" class="absolute right-3 top-3.5 w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center font-bold hidden shadow-sm shadow-orange-500/50">0</span>
+                    </button>
+
+                    <button onclick="switchTab('notificaciones')" id="nav-notificaciones" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-all relative">
+                        🔔 Notificaciones
+                        <span id="global-notifications-count" class="absolute right-3 top-3.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold hidden shadow-sm shadow-red-500/50">0</span>
+                    </button>
+
+                    <button onclick="switchTab('registro')" id="nav-registro" class="nav-btn hidden w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-all">
+                        ➕ Nuevo Registro
+                    </button>
+                    
+                    <button onclick="switchTab('escaner')" id="nav-escaner" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-all">
+                        📷 Escáner QR
+                    </button>
+                    
+                    <button onclick="switchTab('usuarios')" id="nav-usuarios" class="nav-btn hidden w-full items-center gap-3 px-4 py-3 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-all mt-4 border border-dashed border-gray-300 dark:border-darkBorder relative">
+                        👥 Gestión de Usuarios
+                        <span id="users-pending-count" class="absolute right-3 top-3.5 w-5 h-5 rounded-full bg-green-600 text-white text-[10px] flex items-center justify-center font-bold hidden">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <div class="p-6 border-t border-gray-200 dark:border-darkBorder space-y-4">
+                <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 cursor-pointer" onclick="toggleTheme()">
+                    <div id="theme-switch" class="w-10 h-5 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center px-1 transition-colors">
+                        <div id="theme-knob" class="w-4 h-4 bg-white rounded-full shadow-md transform transition-transform translate-x-4"></div>
+                    </div>
+                    <span>Cambiar Tema</span>
+                </div>
+                <button onclick="logout()" class="flex items-center gap-2 text-sm text-red-500 hover:text-red-600 transition-colors w-full px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-500/10">
+                    <span>🚪</span> Cerrar Sesión
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8 md:p-12 relative">
+            
+            <div id="global-pending-filter" class="mb-8 p-4 bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-2xl flex items-center gap-4 text-yellow-700 dark:text-yellow-400 hidden animate-fade-in">
+                <span class="text-4xl">⚠️</span>
+                <div>
+                    <h4 class="font-bold">Tu cuenta aún no está activa.</h4>
+                    <p class="text-sm">El administrador debe revisar y aprobar tu registro. Mientras tanto, puedes visualizar el inventario.</p>
+                </div>
+            </div>
+
+            <div id="view-panel" class="view-section block">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Inventario Actual</h2>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">Resumen global de todas las unidades de hardware registradas en PcLocker.</p>
+                </header>
+
+                <div class="bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder rounded-2xl overflow-hidden shadow-sm dark:shadow-lg transition-colors">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[800px]">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-darkBorder bg-gray-50 dark:bg-white/5">
+                                    <th class="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">ID</th>
+                                    <th class="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Nombre / Modelo</th>
+                                    <th class="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Hardware</th>
+                                    <th class="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Stock</th>
+                                    <th class="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-body" class="divide-y divide-gray-200 dark:divide-darkBorder text-sm">
+                                </tbody>
+                        </table>
+                        <div id="empty-state" class="text-center py-12 text-gray-500">Inventario vacío.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-notificaciones" class="view-section hidden max-w-4xl">
+                <!-- Mismo contenido -->
+                <header class="mb-8 flex items-center gap-3">
+                    <span class="text-3xl">🔔</span>
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-1">Centro de Notificaciones</h2>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">Mantente al tanto de las actividades, solicitudes y alertas del sistema.</p>
+                    </div>
+                </header>
+
+                <div class="bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder rounded-2xl overflow-hidden shadow-sm dark:shadow-lg transition-colors p-2 md:p-6">
+                    <ul id="notifications-list" class="divide-y divide-gray-200 dark:divide-darkBorder">
+                        </ul>
+                    <div id="empty-notifications" class="text-center py-12 text-gray-500 hidden">
+                        <span class="text-4xl block mb-3 opacity-50">📭</span>
+                        No tienes notificaciones nuevas en este momento.
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-prestamos" class="view-section hidden">
+                <div id="prestamos-user-view" class="hidden">
+                    <header class="mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Solicitar Equipos</h2>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">Catálogo de equipos disponibles. Selecciona el que necesitas y espera la aprobación.</p>
+                    </header>
+                    <div id="prestamos-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <div id="prestamos-admin-view" class="hidden">
+                    <header class="mb-8 flex items-center gap-3">
+                        <span class="text-3xl">📥</span>
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-1">Solicitudes de Equipos</h2>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Aprueba o rechaza los préstamos de computadoras solicitados por los usuarios de PcLocker.</p>
+                        </div>
+                    </header>
+                    
+                    <div class="bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder rounded-2xl overflow-hidden shadow-sm dark:shadow-lg transition-colors">
+                        <table class="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-darkBorder bg-gray-50 dark:bg-white/5">
+                                    <th class="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Usuario Solicitante</th>
+                                    <th class="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Equipo Requerido</th>
+                                    <th class="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="loans-pending-body" class="divide-y divide-gray-200 dark:divide-darkBorder text-sm"></tbody>
+                        </table>
+                        <div id="empty-loans-state" class="text-center py-12 text-gray-500 transition-opacity hidden">No hay solicitudes de equipos pendientes.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-registro" class="view-section hidden max-w-2xl">
+                <header class="mb-8"><h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Nuevo Registro</h2></header>
+                <div class="bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder rounded-2xl p-6 shadow-sm dark:shadow-lg">
+                    <form id="add-form" class="space-y-5">
+                        <div class="grid grid-cols-2 gap-5">
+                            <div><label class="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-2">ID</label><input type="text" id="prod-id" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white"></div>
+                            <div><label class="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-2">Modelo</label><input type="text" id="prod-model" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-5">
+                            <div><label class="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-2">Procesador</label><input type="text" id="prod-cpu" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white"></div>
+                            <div><label class="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-2">RAM</label><input type="text" id="prod-ram" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-5">
+                            <div><label class="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-2">Disco Duro</label><input type="text" id="prod-storage" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white"></div>
+                            <div><label class="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-2">SO</label><input type="text" id="prod-os" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white"></div>
+                        </div>
+                        <div><label class="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-2">Stock Inicial</label><input type="number" id="prod-qty" required min="1" class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-3 text-gray-800 dark:text-white"></div>
+                        <button type="submit" class="w-full bg-activeBlue text-white py-3 rounded-lg hover:bg-blue-600 transition">Guardar y Generar QR</button>
+                    </form>
+                    <div class="mt-8 flex flex-col items-center hidden" id="qr-result-container">
+                        <div id="qrcode" class="p-4 bg-white rounded-xl shadow-md border border-gray-200 dark:border-none"></div>
+                        <button onclick="printNewQR()" class="mt-4 bg-gray-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition">🖨️ Imprimir</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-escaner" class="view-section hidden max-w-2xl">
+                <!-- Mismo contenido -->
+                <header class="mb-8"><h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Escáner QR</h2></header>
+                <div class="bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder rounded-2xl p-6 shadow-sm dark:shadow-lg">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Apunta con la cámara al código QR impreso en el equipo.</p>
+                    <div id="qr-reader" class="w-full bg-gray-50 dark:bg-darkBg"></div>
+                    <div id="scan-result" class="mt-6 p-5 rounded-xl hidden animate-fade-in transition-colors"></div>
+                </div>
+            </div>
+
+            <div id="view-usuarios" class="view-section hidden max-w-4xl">
+                <!-- Mismo contenido -->
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Gestión de Usuarios</h2>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">Administra las cuentas y aprueba el registro de nuevos usuarios de PcLocker.</p>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    <div class="bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder rounded-2xl p-6 h-fit shadow-sm dark:shadow-lg">
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Agregar Usuario Directo</h3>
+                        <form id="add-user-form" class="space-y-4">
+                            <div><label class="block text-xs uppercase text-gray-500 dark:text-gray-400 mb-1">Nombre</label><input type="text" id="new-user-name" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-2 text-gray-800 dark:text-white"></div>
+                            <div><label class="block text-xs uppercase text-gray-500 dark:text-gray-400 mb-1">Contraseña</label><input type="password" id="new-user-pass" required class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-2 text-gray-800 dark:text-white"></div>
+                            <div>
+                                <label class="block text-xs uppercase text-gray-500 dark:text-gray-400 mb-1">Rol en el sistema</label>
+                                <select id="new-user-role" class="w-full bg-gray-50 dark:bg-darkBg border border-gray-300 dark:border-darkBorder rounded-lg p-2 text-gray-800 dark:text-white">
+                                    <option value="user">Usuario Normal</option><option value="admin">Administrador</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition text-sm font-bold mt-2">Crear Usuario</button>
+                        </form>
+                    </div>
+
+                    <div class="md:col-span-2 bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder rounded-2xl overflow-hidden shadow-sm dark:shadow-lg">
+                        <h4 class="text-xs font-bold uppercase p-4 tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-darkBorder">Usuarios Activos</h4>
+                        <table class="w-full text-left border-collapse min-w-[500px]">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-darkBorder bg-gray-50 dark:bg-white/5">
+                                    <th class="py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Usuario</th>
+                                    <th class="py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Rol</th>
+                                    <th class="py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-body" class="divide-y divide-gray-200 dark:divide-darkBorder text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="p-8 bg-gray-100/50 dark:bg-gray-800/20 rounded-3xl border border-gray-200 dark:border-darkBorder">
+                    <header class="mb-6 flex items-center gap-3">
+                        <span class="text-3xl">👥</span>
+                        <div><h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">Cuentas Pendientes</h3></div>
+                    </header>
+                    <div class="bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder rounded-2xl overflow-hidden shadow-sm dark:shadow-lg transition-colors">
+                        <table class="w-full text-left border-collapse min-w-[600px]">
+                            <thead><tr class="border-b border-gray-200 dark:border-darkBorder bg-gray-50 dark:bg-white/5"><th class="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Usuario Solicitante</th><th class="py-4 px-6 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase text-center">Aprobar Cuenta</th></tr></thead>
+                            <tbody id="users-pending-body" class="divide-y divide-gray-200 dark:divide-darkBorder text-sm"></tbody>
+                        </table>
+                        <div id="empty-pending-state" class="text-center py-12 text-gray-500 transition-opacity hidden">No hay cuentas nuevas pendientes.</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- NUEVA LÓGICA DE CONEXIÓN CON BACKEND MySQL     -->
+    <!-- ============================================== -->
+    <script>
+       // URL de tu servidor Node.js
+const API_URL = '/api';
+
+let inventory = [];
+let systemUsers = [];
+let loanRequests = [];
+
+async function cargarDatosDesdeBD() {
+    try {
+        const resEquipos = await fetch(`${API_URL}/equipos`);
+        if(resEquipos.ok) inventory = await resEquipos.json();
+        
+        const resUsuarios = await fetch(`${API_URL}/usuarios`);
+        if(resUsuarios.ok) systemUsers = await resUsuarios.json();
+        
+        const resPrestamos = await fetch(`${API_URL}/prestamos`);
+        if(resPrestamos.ok) loanRequests = await resPrestamos.json();
+
+    } catch (error) { console.warn("No se pudo conectar al Backend MySQL."); }
+
+    if(sessionStorage.getItem('isLoggedIn') === 'true') iniciarEntorno();
+}
+
+window.onload = () => {
+    if(localStorage.getItem('theme') === 'light') { document.documentElement.classList.remove('dark'); updateThemeUI(false); } 
+    else { updateThemeUI(true); }
+    cargarDatosDesdeBD();
+};
+
+// --- SISTEMA DE ACCESO ---
+const loginScreen = document.getElementById('login-screen');
+const appContainer = document.getElementById('app-container');
+
+function toggleAccessForm(type) {
+    const loginForm = document.getElementById('login-form'); const registerForm = document.getElementById('register-form');
+    const tabLogin = document.getElementById('tab-login'); const tabRegister = document.getElementById('tab-register');
+    const activeTabClass = "border-b-2 border-activeBlue text-activeBlue"; const inactiveTabClass = "border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white";
+    document.getElementById('login-error').classList.add('hidden'); document.getElementById('register-error').classList.add('hidden'); document.getElementById('register-success').classList.add('hidden');
+
+    if (type === 'register') {
+        loginForm.classList.add('hidden'); registerForm.classList.remove('hidden');
+        tabLogin.className = "flex-1 pb-3 text-sm font-semibold " + inactiveTabClass; tabRegister.className = "flex-1 pb-3 text-sm font-semibold " + activeTabClass;
+    } else {
+        registerForm.classList.add('hidden'); loginForm.classList.remove('hidden');
+        tabRegister.className = "flex-1 pb-3 text-sm font-semibold " + inactiveTabClass; tabLogin.className = "flex-1 pb-3 text-sm font-semibold " + activeTabClass;
+    }
+}
+
+document.getElementById('login-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const userForm = document.getElementById('login-user').value.toLowerCase().trim();
+    const passForm = document.getElementById('login-pass').value;
+    const foundUser = systemUsers.find(u => u.username === userForm && u.password === passForm);
+    console.log("Usuarios cargados:", systemUsers);
+console.log("Intentando entrar con:", userForm, passForm);
+    
+    if(foundUser) {
+        sessionStorage.setItem('isLoggedIn', 'true'); sessionStorage.setItem('currentUser', foundUser.username);
+        sessionStorage.setItem('currentRole', foundUser.role); sessionStorage.setItem('currentApproved', foundUser.approved);
+        document.getElementById('login-error').classList.add('hidden'); iniciarEntorno();
+    } else { document.getElementById('login-error').classList.remove('hidden'); }
+});
+
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newUser = document.getElementById('register-user').value.toLowerCase().trim();
+    const newPass = document.getElementById('register-pass').value; const confirmPass = document.getElementById('register-pass-confirm').value;
+    const errorEl = document.getElementById('register-error'); const successEl = document.getElementById('register-success');
+    errorEl.classList.add('hidden'); successEl.classList.add('hidden');
+
+    if(newPass !== confirmPass) { errorEl.innerText = "Las contraseñas no coinciden."; errorEl.classList.remove('hidden'); return; }
+    if(systemUsers.some(u => u.username === newUser)) { errorEl.innerText = "El usuario ya existe."; errorEl.classList.remove('hidden'); return; }
+
+    const newUserData = { id: 'u_' + Date.now(), username: newUser, password: newPass, role: 'user', approved: false };
+    systemUsers.push(newUserData);
+    
+    // Guardar en MySQL
+    try { await fetch(`${API_URL}/usuarios`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newUserData) }); } catch(e){}
+
+    document.getElementById('register-form').reset(); successEl.classList.remove('hidden');
+    setTimeout(() => toggleAccessForm('login'), 2000);
+});
+
+function logout() {
+    sessionStorage.clear(); appContainer.classList.add('hidden'); loginScreen.classList.remove('hidden');
+    document.getElementById('login-form').reset(); document.getElementById('register-form').reset();
+    toggleAccessForm('login'); if(html5QrcodeScanner) html5QrcodeScanner.clear(); switchTab('panel'); 
+}
+
+function iniciarEntorno() {
+    loginScreen.classList.add('hidden'); appContainer.classList.remove('hidden');
+    const currentUser = sessionStorage.getItem('currentUser'); const currentRole = sessionStorage.getItem('currentRole');
+    const isApproved = sessionStorage.getItem('currentApproved') === 'true';
+
+    document.getElementById('current-user-display').innerText = currentUser;
+    const badge = document.getElementById('current-role-badge');
+    const pendingAlert = document.getElementById('sidebar-pending-alert'); const globalFilterEl = document.getElementById('global-pending-filter');
+    document.getElementById('nav-notificaciones').classList.remove('hidden'); document.getElementById('nav-notificaciones').classList.add('flex');
+
+    if (currentRole === 'admin') {
+        badge.innerText = 'Administrador'; badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 uppercase font-bold';
+        document.getElementById('nav-prestamos').classList.remove('hidden'); document.getElementById('nav-prestamos').classList.add('flex');
+        document.getElementById('prestamos-admin-view').classList.remove('hidden'); document.getElementById('prestamos-user-view').classList.add('hidden');
+        document.getElementById('nav-usuarios').classList.remove('hidden'); document.getElementById('nav-usuarios').classList.add('flex');
+        document.getElementById('nav-registro').classList.remove('hidden'); document.getElementById('nav-registro').classList.add('flex');
+    } else {
+        badge.innerText = 'Usuario'; badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-activeBlue uppercase font-bold';
+        document.getElementById('nav-prestamos').classList.remove('hidden'); document.getElementById('nav-prestamos').classList.add('flex');
+        document.getElementById('prestamos-admin-view').classList.add('hidden'); document.getElementById('prestamos-user-view').classList.remove('hidden');
+        document.getElementById('nav-usuarios').classList.add('hidden'); document.getElementById('nav-usuarios').classList.remove('flex');
+        document.getElementById('nav-registro').classList.add('hidden'); document.getElementById('nav-registro').classList.remove('flex');
+        document.getElementById('loans-pending-count').classList.add('hidden');
+    }
+
+    if (currentRole === 'user' && !isApproved) { pendingAlert.classList.remove('hidden'); globalFilterEl.classList.remove('hidden'); } 
+    else { pendingAlert.classList.add('hidden'); globalFilterEl.classList.add('hidden'); }
+
+    updateDashboard(); updatePrestamosView(); updateNotifications();
+    if(currentRole === 'admin') { updateUsersTables(); updateAdminLoansTable(); }
+}
+
+// --- NOTIFICACIONES ---
+async function updateNotifications() {
+    const listElement = document.getElementById('notifications-list');
+    
+    try {
+        // Hacemos la petición al backend
+        const response = await fetch('/api/notificaciones');
+        const notifications = await response.json();
+        
+        // Limpiamos la lista actual
+        listElement.innerHTML = '';
+        
+        // Renderizamos las notificaciones obtenidas de MySQL
+        notifications.forEach(notif => {
+            const li = document.createElement('li');
+            li.className = 'notification-item';
+            li.innerHTML = `
+                <span>${notif.mensaje}</span>
+                <small>${new Date(notif.created_at).toLocaleString()}</small>
+            `;
+            listElement.appendChild(li);
+        });
+    } catch (error) {
+        console.error("Error al cargar notificaciones:", error);
+    }
+}
+// --- GESTIÓN DE USUARIOS ---
+const userForm = document.getElementById('add-user-form');
+userForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if(sessionStorage.getItem('currentRole') !== 'admin') return;
+    const newName = document.getElementById('new-user-name').value.toLowerCase().trim();
+    const newPass = document.getElementById('new-user-pass').value;
+    const newRole = document.getElementById('new-user-role').value;
+    if(systemUsers.some(u => u.username === newName)) { alert("Ese nombre de usuario ya existe."); return; }
+    
+    const newUserData = { id: 'u_' + Date.now(), username: newName, password: newPass, role: newRole, approved: true };
+    systemUsers.push(newUserData);
+    
+    try { await fetch(`${API_URL}/usuarios`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newUserData) }); } catch(e){}
+
+    updateUsersTables(); updateNotifications(); userForm.reset();
+});
+
+function updateUsersTables() { updateActiveUsersTable(); updatePendingSolicitudesTable(); updatePendingCount(); }
+function updatePendingCount() { const count = systemUsers.filter(u => !u.approved).length; const countEl = document.getElementById('users-pending-count'); if(count > 0) { countEl.innerText = count; countEl.classList.remove('hidden'); } else countEl.classList.add('hidden'); }
+function updateActiveUsersTable() {
+    const tbody = document.getElementById('users-body'); tbody.innerHTML = '';
+    systemUsers.filter(u => u.approved).forEach(u => {
+        const tr = document.createElement('tr'); tr.className = "hover:bg-gray-100 dark:hover:bg-white/5 transition-colors";
+        const deleteBtnHtml = u.username === sessionStorage.getItem('currentUser') ? `<span class="text-xs text-gray-500">(Tú)</span>` : `<button onclick="deleteUser('${u.id}')" class="text-red-500 hover:text-red-400 text-xs px-2 py-1 bg-red-500/10 rounded">Borrar</button>`;
+        tr.innerHTML = `<td class="py-3 px-4 font-medium text-gray-800 dark:text-white capitalize">${u.username}</td><td class="py-3 px-4"><span class="px-2 py-1 rounded text-xs ${u.role === 'admin' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}">${u.role === 'admin' ? 'Admin' : 'Usuario'}</span></td><td class="py-3 px-4 text-center space-x-2"><button onclick="openPasswordModal('${u.id}', '${u.username}')" class="text-blue-500 hover:text-blue-400 text-xs px-2 py-1 bg-blue-500/10 rounded">Contraseña</button>${deleteBtnHtml}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function updatePendingSolicitudesTable() {
+    const tbody = document.getElementById('users-pending-body'); tbody.innerHTML = ''; const pendingUsers = systemUsers.filter(u => !u.approved);
+    if(pendingUsers.length === 0) { document.getElementById('empty-pending-state').classList.remove('hidden'); } 
+    else { document.getElementById('empty-pending-state').classList.add('hidden'); pendingUsers.forEach(u => { const tr = document.createElement('tr'); tr.className = "hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"; tr.innerHTML = `<td class="py-4 px-6 font-semibold text-gray-800 dark:text-white capitalize text-lg flex items-center gap-3"><span class="p-2 rounded-full bg-yellow-100 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400 text-xs">⏳</span>${u.username}</td><td class="py-4 px-6 text-center space-x-2 whitespace-nowrap"><button onclick="approveUserAccount('${u.id}')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 font-bold transition">✅ Aprobar Permisos</button><button onclick="deleteUser('${u.id}')" class="text-gray-500 dark:text-gray-400 hover:text-red-500 text-sm px-3 py-2 bg-gray-500/10 rounded hover:bg-red-500/10">Rechazar</button></td>`; tbody.appendChild(tr); }); }
+}
+
+async function approveUserAccount(id) { 
+    const userIndex = systemUsers.findIndex(u => u.id === id); 
+    if (userIndex !== -1) { 
+        systemUsers[userIndex].approved = true; 
+        try { await fetch(`${API_URL}/usuarios/${id}/approve`, { method: 'PUT' }); } catch(e){}
+        updateUsersTables(); updateNotifications(); 
+        if(systemUsers[userIndex].username === sessionStorage.getItem('currentUser')) { sessionStorage.setItem('currentApproved', 'true'); iniciarEntorno(); } 
+    } 
+}
+async function deleteUser(id) { 
+    if(confirm("¿Seguro que deseas borrar este usuario?")) { 
+        systemUsers = systemUsers.filter(u => u.id !== id); 
+        try { await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE' }); } catch(e){}
+        updateUsersTables(); updateNotifications(); 
+    } 
+}
+
+const passModal = document.getElementById('password-modal');
+function openPasswordModal(id, username) { document.getElementById('pass-target-id').value = id; document.getElementById('pass-modal-user').innerText = username; document.getElementById('new-password').value = ''; passModal.classList.remove('hidden'); passModal.classList.add('flex'); }
+function closePasswordModal() { passModal.classList.add('hidden'); passModal.classList.remove('flex'); }
+document.getElementById('change-pass-form').addEventListener('submit', async (e) => { 
+    e.preventDefault(); 
+    const targetId = document.getElementById('pass-target-id').value; const newPass = document.getElementById('new-password').value; 
+    const index = systemUsers.findIndex(u => u.id === targetId); 
+    if(index !== -1) { 
+        systemUsers[index].password = newPass; 
+        try { await fetch(`${API_URL}/usuarios/${targetId}/password`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({password: newPass}) }); } catch(e){}
+        alert("Contraseña actualizada."); closePasswordModal(); 
+    } 
+});
+
+// --- LÓGICA DEL INVENTARIO Y PRÉSTAMOS ---
+const tableBody = document.getElementById('inventory-body');
+
+document.getElementById('add-form').addEventListener('submit', async (e) => {
+    e.preventDefault(); if(sessionStorage.getItem('currentRole') !== 'admin') return;
+    const id = document.getElementById('prod-id').value.trim(); const model = document.getElementById('prod-model').value.trim(); 
+    const hw = `${document.getElementById('prod-cpu').value.trim()} | ${document.getElementById('prod-ram').value.trim()} | ${document.getElementById('prod-storage').value.trim()} | ${document.getElementById('prod-os').value.trim()}`; 
+    const qty = parseInt(document.getElementById('prod-qty').value);
+    
+    const existing = inventory.findIndex(item => item.id === id);
+    if (existing !== -1) { inventory[existing].qty += qty; } else { inventory.push({ id, name: model, hardware: hw, qty }); }
+    
+    try { await fetch(`${API_URL}/equipos`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, name: model, hardware: hw, qty }) }); } catch (error) { console.log(error); }
+
+    updateDashboard(); updatePrestamosView(); generateNewQR(id); updateNotifications(); document.getElementById('add-form').reset();
+});
+
+function updateDashboard() {
+    tableBody.innerHTML = ''; const currentRole = sessionStorage.getItem('currentRole');
+    if (inventory.length === 0) { document.getElementById('empty-state').classList.remove('hidden'); } 
+    else {
+        document.getElementById('empty-state').classList.add('hidden');
+        inventory.forEach(item => {
+            const tr = document.createElement('tr'); tr.className = "hover:bg-gray-100 dark:hover:bg-white/5 transition-colors group";
+            let actionsHtml = `<button onclick="openQRModal('${item.id}')" title="Ver QR" class="bg-gray-200 dark:bg-darkBg text-gray-700 dark:text-white px-2 py-1.5 rounded-lg text-sm hover:bg-gray-300 dark:hover:bg-white/10 transition">📱</button>`;
+            if (currentRole === 'admin') { actionsHtml += `<button onclick="deleteItem('${item.id}')" title="Borrar Equipo" class="bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20 px-2 py-1.5 rounded-lg text-sm transition ml-2">🗑️</button>`; }
+            tr.innerHTML = `<td class="py-4 px-6 text-gray-800 dark:text-white font-medium">${item.id}</td><td class="py-4 px-6 text-gray-600 dark:text-gray-300">${item.name}</td><td class="py-4 px-6 text-gray-600 dark:text-gray-400">${item.hardware}</td><td class="py-4 px-6"><span class="bg-blue-100 dark:bg-blue-500/10 text-activeBlue px-3 py-1 rounded-full font-bold">${item.qty}</span></td><td class="py-4 px-6 text-center space-x-1 whitespace-nowrap flex justify-center group-hover:opacity-100 transition-opacity">${actionsHtml}</td>`;
+            tableBody.appendChild(tr);
+        });
+    }
+}
+
+async function requestLoan(pcId) { 
+    const currentUser = sessionStorage.getItem('currentUser'); 
+    
+    // Validar si ya hay una solicitud pendiente
+    const existing = loanRequests.find(r => r.username === currentUser && r.pcId === pcId && r.status === 'pending'); 
+    if (existing) {
+        alert("Ya tienes una solicitud en proceso para este equipo ⏳");
+        return; 
+    }
+
+    try { 
+        // 1. Guardar el préstamo en MySQL
+        const res = await fetch(`${API_URL}/prestamos`, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ username: currentUser, pcId: pcId, status: 'pending' }) 
+        }); 
+        
+        if (!res.ok) {
+            alert("❌ Error al guardar en la base de datos.");
+            return;
+        }
+
+        // 2. Descargar los datos frescos usando 'await' para no adelantarnos
+        await cargarDatosDesdeBD();
+        
+        // 3. Avisar al usuario que todo salió bien
+        alert("✅ ¡Solicitud enviada con éxito! El administrador la revisará.");
+
+        // 4. Actualizar la vista manualmente por seguridad
+        updatePrestamosView(); 
+        updateNotifications(); 
+
+    } catch(error) {
+        console.error("Error en requestLoan:", error);
+        alert("❌ Error de red. Asegúrate de tener tu servidor Node encendido.");
+    }
+}
+function updatePrestamosView() { const grid = document.getElementById('prestamos-grid'); grid.innerHTML = ''; const isApproved = sessionStorage.getItem('currentApproved') === 'true'; const currentUser = sessionStorage.getItem('currentUser'); if (inventory.length === 0) { grid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">No hay equipos disponibles.</div>'; return; } inventory.forEach(item => { const card = document.createElement('div'); card.className = "bg-white dark:bg-darkCard border border-gray-200 dark:border-darkBorder rounded-2xl p-6 shadow-sm flex flex-col h-full hover:border-activeBlue transition-colors"; const pendingReq = loanRequests.find(r => r.username === currentUser && r.pcId === item.id && r.status === 'pending'); let btnHtml = ''; if (!isApproved) { btnHtml = `<button disabled class="w-full mt-auto bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-600 py-2.5 rounded-xl cursor-not-allowed font-medium">Espera aprobación</button>`; } else if (item.qty <= 0) { btnHtml = `<button disabled class="w-full mt-auto bg-red-100 dark:bg-red-500/10 text-red-500 py-2.5 rounded-xl cursor-not-allowed font-medium">Agotado</button>`; } else if (pendingReq) { btnHtml = `<button disabled class="w-full mt-auto bg-yellow-100 dark:bg-yellow-500/10 text-yellow-600 py-2.5 rounded-xl cursor-not-allowed font-bold">⏳ Solicitud Enviada</button>`; } else { btnHtml = `<button onclick="requestLoan('${item.id}')" class="w-full mt-auto bg-activeBlue text-white py-2.5 rounded-xl hover:bg-blue-600 transition font-bold shadow-md shadow-blue-500/20">Solicitar Equipo</button>`; } card.innerHTML = `<div class="flex justify-between items-start mb-4"><h3 class="text-xl font-bold text-gray-800 dark:text-white leading-tight">${item.name}</h3><span class="bg-blue-100 dark:bg-blue-500/10 text-activeBlue text-xs px-3 py-1.5 rounded-full font-bold">Stock: ${item.qty}</span></div><div class="text-sm text-gray-600 dark:text-gray-400 mb-6 space-y-2 flex-grow"><p><strong class="text-gray-500 uppercase text-xs">ID de Equipo:</strong><br/> ${item.id}</p><p><strong class="text-gray-500 uppercase text-xs">Componentes:</strong><br/> ${item.hardware}</p></div>${btnHtml}`; grid.appendChild(card); }); }
+
+function updateAdminLoansTable() { const tbody = document.getElementById('loans-pending-body'); tbody.innerHTML = ''; const pendingLoans = loanRequests.filter(req => req.status === 'pending'); if(pendingLoans.length === 0) { document.getElementById('empty-loans-state').classList.remove('hidden'); } else { document.getElementById('empty-loans-state').classList.add('hidden'); pendingLoans.forEach(req => { const pc = inventory.find(i => i.id === req.pcId); const pcName = pc ? pc.name : 'Equipo Desconocido'; const tr = document.createElement('tr'); tr.className = "hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"; tr.innerHTML = `<td class="py-4 px-6 font-semibold text-gray-800 dark:text-white capitalize text-lg flex items-center gap-3"><span class="p-2 rounded-full bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 text-xs">👤</span>${req.username}</td><td class="py-4 px-6 text-gray-600 dark:text-gray-300"><strong>${pcName}</strong><br><span class="text-xs text-gray-500">ID: ${req.pcId}</span></td><td class="py-4 px-6 text-center space-x-2 whitespace-nowrap"><button onclick="approveLoan(${req.id})" class="bg-activeBlue text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 font-bold transition">✅ Prestar Equipo</button><button onclick="rejectLoan(${req.id})" class="text-gray-500 dark:text-gray-400 hover:text-red-500 text-sm px-3 py-2 bg-gray-500/10 rounded hover:bg-red-500/10">Rechazar</button></td>`; tbody.appendChild(tr); }); } const countEl = document.getElementById('loans-pending-count'); if(pendingLoans.length > 0) { countEl.innerText = pendingLoans.length; countEl.classList.remove('hidden'); } else countEl.classList.add('hidden'); }
+
+async function approveLoan(reqId) { 
+    const req = loanRequests.find(r => r.id === reqId); 
+    if (req) { 
+        const pc = inventory.find(i => i.id === req.pcId); 
+        if (pc && pc.qty > 0) { 
+            pc.qty -= 1; req.status = 'approved'; 
+            try {
+                await fetch(`${API_URL}/prestamos/${reqId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({status: 'approved'}) });
+                await fetch(`${API_URL}/equipos/${pc.id}/stock`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({change: -1}) });
+            } catch(e){}
+            updateDashboard(); updateAdminLoansTable(); updatePrestamosView(); updateNotifications(); 
+        } else { alert("Error: No hay stock."); } 
+    } 
+}
+
+async function rejectLoan(reqId) { 
+    if(confirm('¿Rechazar esta solicitud de préstamo?')) { 
+        const req = loanRequests.find(r => r.id === reqId); 
+        if (req) { 
+            req.status = 'rejected'; 
+            try { await fetch(`${API_URL}/prestamos/${reqId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({status: 'rejected'}) }); } catch(e){}
+            updateAdminLoansTable(); updatePrestamosView(); updateNotifications(); 
+        } 
+    } 
+}
+
+async function updateQtyManual(id, change) { 
+    const item = inventory.find(i => i.id === id); 
+    if(item && item.qty + change >= 0) { 
+        if (change < 0 && !confirm(`¿Retirar manualmente ${item.name} del inventario?`)) return; 
+        item.qty += change; 
+        try { await fetch(`${API_URL}/equipos/${id}/stock`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({change: change}) }); } catch(e){}
+        updateDashboard(); updatePrestamosView(); updateNotifications(); 
+    } else if (change < 0) alert("No hay stock disponible."); 
+}
+        
+async function deleteItem(id) { 
+    if(confirm(`¿Eliminar permanente el registro ${id}?`)) { 
+        inventory = inventory.filter(item => item.id !== id); 
+        try { await fetch(`${API_URL}/equipos/${id}`, { method: 'DELETE' }); } catch(e) { console.log(e); }
+        updateDashboard(); updatePrestamosView(); updateNotifications(); 
+    } 
+}
+
+// --- NAVEGACIÓN Y TEMA ---
+function switchTab(tabName) { document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden')); document.getElementById(`view-${tabName}`).classList.remove('hidden'); document.querySelectorAll('.nav-btn').forEach(btn => { btn.classList.remove('bg-activeBlue', 'text-white', 'shadow-md', 'shadow-blue-500/20'); btn.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-white', 'hover:bg-gray-100', 'dark:hover:bg-white/5'); }); const activeBtn = document.getElementById(`nav-${tabName}`); activeBtn.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-white', 'hover:bg-gray-100', 'dark:hover:bg-white/5'); activeBtn.classList.add('bg-activeBlue', 'text-white', 'shadow-md', 'shadow-blue-500/20'); if(tabName !== 'escaner' && html5QrcodeScanner) { html5QrcodeScanner.clear().catch(e => console.log(e)); html5QrcodeScanner = null; } else if (tabName === 'escaner' && !html5QrcodeScanner) { setTimeout(() => { html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: {width: 250, height: 250} }, false); html5QrcodeScanner.render(onScanSuccess, () => {}); }, 100); } }
+function toggleTheme() { const isDark = document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', isDark ? 'dark' : 'light'); updateThemeUI(isDark); }
+function updateThemeUI(isDark) { const knob = document.getElementById('theme-knob'); if(isDark) { knob.classList.add('translate-x-4'); knob.classList.remove('translate-x-0'); } else { knob.classList.remove('translate-x-4'); knob.classList.add('translate-x-0'); } }
+
+// --- FUNCIONES QR ---
+function generateNewQR(text) { const qrContainer = document.getElementById('qrcode'); qrContainer.innerHTML = ''; document.getElementById('qr-result-container').classList.remove('hidden'); new QRCode(qrContainer, { text: text, width: 180, height: 180, colorDark : "#000000", colorLight : "#ffffff" }); }
+const qrModal = document.getElementById('qr-modal'); function openQRModal(id) { document.getElementById('modal-qrcode').innerHTML = ''; document.getElementById('modal-qr-id').innerText = id; new QRCode(document.getElementById('modal-qrcode'), { text: id, width: 200, height: 200, colorDark : "#000000", colorLight : "#ffffff" }); qrModal.classList.remove('hidden'); qrModal.classList.add('flex'); }
+function closeQRModal() { qrModal.classList.add('hidden'); qrModal.classList.remove('flex'); }
+function executePrint(canvasId) { const canvas = document.querySelector(`${canvasId} canvas`); if(!canvas) return; const dataUrl = canvas.toDataURL("image/png"); const win = window.open('', '_blank'); win.document.write(`<html><body style="margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><img src="${dataUrl}" style="width:300px;border:2px dashed #000;padding:10px;"/><h2 style="margin-top:20px;">EQUIPO INVENTARIO</h2></body></html>`); win.document.close(); setTimeout(() => { win.focus(); win.print(); win.close(); }, 250); }
+function printNewQR() { executePrint('#qrcode'); } function printModalQR() { executePrint('#modal-qrcode'); }
+
+let html5QrcodeScanner = null;
+function onScanSuccess(decodedText) { const item = inventory.find(i => i.id === decodedText); const scanDiv = document.getElementById('scan-result'); const isApproved = sessionStorage.getItem('currentApproved') === 'true'; const currentRole = sessionStorage.getItem('currentRole'); const currentUser = sessionStorage.getItem('currentUser'); scanDiv.classList.remove('hidden'); if (item) { let actionBtnHtml = ''; if (currentRole === 'admin') { actionBtnHtml = `<button onclick="updateQtyManual('${item.id}', -1)" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-700 transition shadow-md">Retirar Equipo Manualmente (-1 stock)</button>`; } else if (currentRole === 'user' && !isApproved) { actionBtnHtml = `<button disabled class="mt-3 bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-600 px-3 py-1.5 rounded text-sm cursor-not-allowed opacity-60">Falta aprobación de cuenta</button>`; } else if (currentRole === 'user') { const pendingReq = loanRequests.find(r => r.username === currentUser && r.pcId === item.id && r.status === 'pending'); if(pendingReq) { actionBtnHtml = `<button disabled class="mt-3 bg-yellow-100 dark:bg-yellow-500/10 text-yellow-600 px-4 py-2 rounded-xl text-sm font-bold cursor-not-allowed">⏳ Solicitud ya enviada</button>`; } else if (item.qty <= 0) { actionBtnHtml = `<button disabled class="mt-3 bg-red-100 dark:bg-red-500/10 text-red-500 px-4 py-2 rounded-xl text-sm font-bold cursor-not-allowed">Agotado</button>`; } else { actionBtnHtml = `<button onclick="requestLoan('${item.id}')" class="mt-3 bg-activeBlue text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-600 transition shadow-md">Solicitar Equipo al Admin</button>`; } } scanDiv.className = "mt-6 p-5 rounded-xl animate-fade-in bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20"; scanDiv.innerHTML = `<h3 class="text-green-600 dark:text-green-400 font-bold mb-2 text-lg flex items-center gap-2">✅ Encontrado: ${item.name}</h3><p class="text-sm text-gray-600 dark:text-gray-300">ID: ${item.id} | Componentes: ${item.hardware} | Stock: <strong>${item.qty}</strong></p><div class="mt-4">${actionBtnHtml}</div>`; } else { scanDiv.className = "mt-6 p-5 rounded-xl animate-fade-in bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20"; scanDiv.innerHTML = `<h3 class="text-red-600 dark:text-red-400 font-bold mb-2 flex items-center gap-2">❌ No Encontrado</h3><p class="text-sm text-red-500 dark:text-red-300">El código ${decodedText} no coincide con ningún equipo.</p>`; } }
+</script>
+</body>
+</html>
