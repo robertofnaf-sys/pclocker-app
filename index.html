@@ -416,8 +416,11 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     const userForm = document.getElementById('login-user').value.toLowerCase().trim();
     const passForm = document.getElementById('login-pass').value;
     const foundUser = systemUsers.find(u => u.username === userForm && u.password === passForm);
+<<<<<<< HEAD
     console.log("Usuarios cargados:", systemUsers);
 console.log("Intentando entrar con:", userForm, passForm);
+=======
+>>>>>>> b7047924f1d40ab9ed66919706884474b166f074
     
     if(foundUser) {
         sessionStorage.setItem('isLoggedIn', 'true'); sessionStorage.setItem('currentUser', foundUser.username);
@@ -485,6 +488,7 @@ function iniciarEntorno() {
 }
 
 // --- NOTIFICACIONES ---
+<<<<<<< HEAD
 async function updateNotifications() {
     const listElement = document.getElementById('notifications-list');
     
@@ -510,6 +514,35 @@ async function updateNotifications() {
         console.error("Error al cargar notificaciones:", error);
     }
 }
+=======
+function updateNotifications() {
+    const list = document.getElementById('notifications-list'); list.innerHTML = '';
+    const currentRole = sessionStorage.getItem('currentRole'); const currentUser = sessionStorage.getItem('currentUser');
+    const isApproved = sessionStorage.getItem('currentApproved') === 'true';
+    let notifs = []; const colors = { green: 'bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400', blue: 'bg-blue-100 dark:bg-blue-500/10 text-activeBlue dark:text-activeBlue', yellow: 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-400', red: 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400' };
+
+    if (currentRole === 'admin') {
+        systemUsers.filter(u => !u.approved).forEach(u => { notifs.push({ icon: '👤', title: 'Nuevo usuario registrado', desc: `El usuario "${u.username}" espera la aprobación de su cuenta.`, time: 'Pendiente', color: colors.green, action: () => switchTab('usuarios') }); });
+        loanRequests.filter(req => req.status === 'pending').forEach(req => { const pc = inventory.find(i => i.id === req.pcId); notifs.push({ icon: '💻', title: 'Solicitud de préstamo', desc: `El usuario "${req.username}" solicita el equipo ${pc ? pc.name : req.pcId}.`, time: 'Pendiente', color: colors.blue, action: () => switchTab('prestamos') }); });
+        inventory.filter(item => item.qty <= 1).forEach(item => { notifs.push({ icon: '⚠️', title: 'Alerta de Stock Bajo', desc: `El equipo ${item.name} (${item.id}) tiene solo ${item.qty} unidad(es) disponible(s).`, time: 'Aviso Sistema', color: colors.yellow, action: () => switchTab('panel') }); });
+    } else {
+        if (!isApproved) { notifs.push({ icon: '⏳', title: 'Cuenta en Revisión', desc: `Tu cuenta está inactiva. El administrador debe aprobarte antes de que puedas solicitar Equipo.`, time: 'Aviso Sistema', color: colors.yellow, action: null }); }
+        const myLoans = loanRequests.filter(req => req.username === currentUser);
+        myLoans.reverse().forEach(req => { const pc = inventory.find(i => i.id === req.pcId); let statusText = '', cClass = ''; if(req.status === 'pending') { statusText = 'Pendiente de aprobación'; cClass = colors.yellow; } else if(req.status === 'approved') { statusText = '¡Préstamo aprobado! El equipo te ha sido asignado.'; cClass = colors.green; } else if(req.status === 'rejected') { statusText = 'Préstamo denegado por el administrador.'; cClass = colors.red; } notifs.push({ icon: '📦', title: `Solicitud: ${pc ? pc.name : req.pcId}`, desc: `Estado de tu petición: ${statusText}`, time: req.status === 'pending' ? 'Activo' : 'Cerrado', color: cClass, action: null }); });
+    }
+
+    if (notifs.length === 0) { document.getElementById('empty-notifications').classList.remove('hidden'); } else {
+        document.getElementById('empty-notifications').classList.add('hidden');
+        notifs.forEach(n => {
+            const li = document.createElement('li'); li.className = `py-4 px-2 flex items-start gap-4 ${n.action ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors rounded-xl' : ''}`; if(n.action) li.onclick = n.action;
+            li.innerHTML = `<div class="flex-shrink-0 w-10 h-10 rounded-full ${n.color} flex items-center justify-center text-xl shadow-sm">${n.icon}</div><div class="flex-1 min-w-0 mt-1"><p class="text-sm font-bold text-gray-900 dark:text-white truncate">${n.title}</p><p class="text-sm text-gray-500 dark:text-gray-400 leading-snug mt-1">${n.desc}</p></div><div class="flex-shrink-0 text-xs font-semibold px-2 py-1 rounded-md bg-gray-100 dark:bg-darkBg text-gray-400 dark:text-gray-500 uppercase tracking-wide">${n.time}</div>`; list.appendChild(li);
+        });
+    }
+    const badge = document.getElementById('global-notifications-count'); const actionables = currentRole === 'admin' ? notifs.filter(n => n.time === 'Pendiente').length : notifs.filter(n => n.time === 'Activo' || n.time === 'Aviso Sistema').length;
+    if (actionables > 0) { badge.innerText = actionables; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
+}
+
+>>>>>>> b7047924f1d40ab9ed66919706884474b166f074
 // --- GESTIÓN DE USUARIOS ---
 const userForm = document.getElementById('add-user-form');
 userForm.addEventListener('submit', async (e) => {
